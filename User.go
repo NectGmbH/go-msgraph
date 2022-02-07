@@ -21,18 +21,41 @@ type User struct {
 	UserPrincipalName string            `json:"userPrincipalName,omitempty"`
 	AccountEnabled    bool              `json:"accountEnabled,omitempty"`
 	AssignedLicenses  []AssignedLicense `json:"assignedLicenses,omitempty"`
+	AssignedPlans     []AssignedPlan    `json:"assignedPlans,omitempty"`
+	ProvisionedPlans  []ProvisionedPlan `json:"provisionedPlans,omitempty"`
 	CompanyName       string            `json:"companyName,omitempty"`
 	Department        string            `json:"department,omitempty"`
 	MailNickname      string            `json:"mailNickname,omitempty"`
 	PasswordProfile   PasswordProfile   `json:"passwordProfile,omitempty"`
+	UsageLocation     string            `json:"usageLocation,omitempty"`
 
 	activePhone string       // private cache for the active phone number
 	graphClient *GraphClient // the graphClient that called the user
 }
 
+//displayName,givenName,mail,accountEnabled,assignedLicenses,assignedPlans,provisionedPlans,licenseAssignmentStates
+
+type AssignLicenses struct {
+	AddLicenses    []AssignedLicense `json:"addLicenses,omitempty"`
+	RemoveLicenses []string          `json:"removeLicenses"`
+}
+
 type AssignedLicense struct {
 	DisabledPlans []string `json:"disabledPlans,omitempty"`
 	SkuID         string   `json:"skuId,omitempty"`
+}
+
+type AssignedPlan struct {
+	AssignedDateTime string `json:"assignedDateTime"`
+	CapabilityStatus string `json:"capabilityStatus"`
+	Service          string `json:"service"`
+	ServicePlanID    string `json:"servicePlanId"`
+}
+
+type ProvisionedPlan struct {
+	CapabilityStatus   string `json:"capabilityStatus"`
+	ProvisioningStatus string `json:"provisioningStatus"`
+	Service            string `json:"service"`
 }
 
 type PasswordProfile struct {
@@ -171,6 +194,22 @@ func (u User) UpdateUser(userInput User, opts ...UpdateQueryOption) error {
 	reader := bytes.NewReader(bodyBytes)
 	// Hint: API-call body does not return any data / no json object.
 	err = u.graphClient.makePATCHAPICall(resource, compileUpdateQueryOptions(opts), reader, nil)
+	return err
+}
+
+func (u User) AssignLicense(licenseInput AssignLicenses, opts ...UpdateQueryOption) error {
+	if u.graphClient == nil {
+		return ErrNotGraphClientSourced
+	}
+	resource := fmt.Sprintf("/users/%v/assignLicense", u.ID)
+
+	bodyBytes, err := json.Marshal(licenseInput)
+	if err != nil {
+		return err
+	}
+
+	reader := bytes.NewReader(bodyBytes)
+	err = u.graphClient.makePOSTAPICall(resource, compileUpdateQueryOptions(opts), reader, nil)
 	return err
 }
 

@@ -1,6 +1,7 @@
 package msgraph
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -55,6 +56,24 @@ func (g Group) ListMembers(opts ...ListQueryOption) (Users, error) {
 	}
 	marsh.Users.setGraphClient(g.graphClient)
 	return marsh.Users, g.graphClient.makeGETAPICall(resource, compileListQueryOptions(opts), &marsh)
+}
+
+func (g Group) AddMember(user User, opts ...UpdateQueryOption) error {
+	if g.graphClient == nil {
+		return ErrNotGraphClientSourced
+	}
+	resource := fmt.Sprintf("/groups/%v/members/$ref", g.ID)
+
+	bodyBytes, err := json.Marshal(map[string]string{
+		"@odata.id": fmt.Sprintf("%s/%s", "https://graph.microsoft.com/v1.0/users", user.ID),
+	})
+	if err != nil {
+		return err
+	}
+
+	reader := bytes.NewReader(bodyBytes)
+	err = g.graphClient.makePOSTAPICall(resource, compileUpdateQueryOptions(opts), reader, nil)
+	return err
 }
 
 // UnmarshalJSON implements the json unmarshal to be used by the json-library

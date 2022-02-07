@@ -193,7 +193,7 @@ func (g *GraphClient) makeAPICall(apiCall string, httpMethod string, reqParams g
 
 	var getParams = reqParams.Values()
 
-	if httpMethod == http.MethodGet {
+	if httpMethod == http.MethodGet && apiCall != "/subscribedSkus" {
 		// TODO: Improve performance with using $skip & paging instead of retrieving all results with $top
 		// TODO: MaxPageSize is currently 999, if there are any time more than 999 entries this will make the program unpredictable... hence start to use paging (!)
 		getParams.Add("$top", strconv.Itoa(MaxPageSize))
@@ -280,7 +280,7 @@ func (g *GraphClient) performRequest(req *http.Request, v interface{}) error {
 	}
 
 	// no content returned when http PATCH or DELETE is used, e.g. User.DeleteUser()
-	if req.Method == http.MethodDelete || req.Method == http.MethodPatch {
+	if req.Method == http.MethodDelete || req.Method == http.MethodPatch || resp.StatusCode == http.StatusNoContent {
 		return nil
 	}
 	type skipTokenCallData struct {
