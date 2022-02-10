@@ -28,6 +28,7 @@ type User struct {
 	MailNickname      string            `json:"mailNickname,omitempty"`
 	PasswordProfile   PasswordProfile   `json:"passwordProfile,omitempty"`
 	UsageLocation     string            `json:"usageLocation,omitempty"`
+	JobTitle          string            `json:"jobTitle,omitempty"`
 
 	activePhone string       // private cache for the active phone number
 	graphClient *GraphClient // the graphClient that called the user
